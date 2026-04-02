@@ -76,9 +76,9 @@ sai_switch_api_t * test_sai_api_switch() {
     
     g_port_count = attrs[0].value.objlist.count;
 
-    for (int32_t ii = 0; ii < attrs[0].value.objlist.count; ii++) {
-        printf("Port #%d OID: 0x%lX\n", ii, attrs[0].value.objlist.list[ii]);
-    }
+    // for (int32_t ii = 0; ii < attrs[0].value.objlist.count; ii++) {
+    //     printf("Port #%d OID: 0x%lX\n", ii, attrs[0].value.objlist.list[ii]);
+    // }
 
     return switch_api;
 }
@@ -94,9 +94,6 @@ void test_sai_api_lag() {
 
     sai_object_id_t lag_oid_1;
     status = lag_api->create_lag(&lag_oid_1, 0, NULL);
-    log_message(concat_str_oid_msg("Created LAG", lag_oid_1),
-                "Failed to create LAG",
-                status);
 
     sai_attribute_t attrs_1[2];
     attrs_1[0].id = SAI_LAG_MEMBER_ATTR_LAG_ID;
@@ -106,9 +103,6 @@ void test_sai_api_lag() {
     
     sai_object_id_t lag_member_oid_1;
     status = lag_api->create_lag_member(&lag_member_oid_1, 2, attrs_1);
-    log_message(concat_str_oid_msg("Created LAG member", lag_member_oid_1),
-                "Failed to create LAG member",
-                status);
 
     sai_attribute_t attrs_2[2];
     attrs_2[0].id = SAI_LAG_MEMBER_ATTR_LAG_ID;
@@ -118,15 +112,9 @@ void test_sai_api_lag() {
     
     sai_object_id_t lag_member_oid_2;
     status = lag_api->create_lag_member(&lag_member_oid_2, 2, attrs_2);
-    log_message(concat_str_oid_msg("Created LAG member", lag_member_oid_2),
-                "Failed to create LAG member",
-                status);
 
     sai_object_id_t lag_oid_2;
     status = lag_api->create_lag(&lag_oid_2, 0, NULL);
-    log_message(concat_str_oid_msg("Created LAG", lag_oid_2),
-                "Failed to create LAG",
-                status);
 
     sai_attribute_t attrs_3[2];
     attrs_3[0].id = SAI_LAG_MEMBER_ATTR_LAG_ID;
@@ -136,9 +124,6 @@ void test_sai_api_lag() {
 
     sai_object_id_t lag_member_oid_3;
     status = lag_api->create_lag_member(&lag_member_oid_3, 2, attrs_3);
-    log_message(concat_str_oid_msg("Created LAG member", lag_member_oid_3),
-                "Failed to create LAG member",
-                status);
 
     sai_attribute_t attrs_4[2];
     attrs_4[0].id = SAI_LAG_MEMBER_ATTR_LAG_ID;
@@ -148,9 +133,6 @@ void test_sai_api_lag() {
 
     sai_object_id_t lag_member_oid_4;
     status = lag_api->create_lag_member(&lag_member_oid_4, 2, attrs_4);
-    log_message(concat_str_oid_msg("Created LAG member", lag_member_oid_4),
-                "Failed to create LAG member",
-                status);
     
     status = lag_api->get_lag_attribute(lag_oid_1, 0, NULL);
     status = lag_api->get_lag_attribute(lag_oid_2, 0, NULL);
@@ -159,38 +141,16 @@ void test_sai_api_lag() {
     status = lag_api->get_lag_member_attribute(lag_member_oid_3, 0, NULL);
     
     status = lag_api->remove_lag_member(lag_member_oid_2);
-    log_message(NULL,
-                concat_str_oid_msg("Failed to remove LAG member", lag_member_oid_2),
-                status);
-    
     status = lag_api->get_lag_attribute(lag_oid_1, 0, NULL);
 
     status = lag_api->remove_lag_member(lag_member_oid_3);
-    log_message(NULL,
-                concat_str_oid_msg("Failed to remove LAG member", lag_member_oid_3),
-                status);
-
     status = lag_api->get_lag_attribute(lag_oid_2, 0, NULL);
 
     status = lag_api->remove_lag_member(lag_member_oid_1);
-    log_message(NULL,
-                concat_str_oid_msg("Failed to remove LAG member", lag_member_oid_1),
-                status);
-
     status = lag_api->remove_lag_member(lag_member_oid_4);
-    log_message(NULL,
-                concat_str_oid_msg("Failed to remove LAG member", lag_member_oid_4),
-                status);
 
     status = lag_api->remove_lag(lag_oid_2);
-    log_message(NULL,
-                concat_str_oid_msg("Failed to remove LAG", lag_oid_2),
-                status);
-
     status = lag_api->remove_lag(lag_oid_1);
-    log_message(NULL,
-                concat_str_oid_msg("Failed to remove LAG", lag_oid_1),
-                status);
 }
 
 int main() {
