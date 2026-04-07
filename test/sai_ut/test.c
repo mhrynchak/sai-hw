@@ -5,6 +5,7 @@
 #include "sai.h"
 
 #define MAX_PORTS 64
+#define MAX_NUMBER_OF_LAG_MEMBERS 16
 
 sai_object_id_t g_port_list[MAX_PORTS];
 uint32_t g_port_count = 0;
@@ -29,10 +30,15 @@ const service_method_table_t test_services = {
     test_profile_get_next_value
 };
 
-char * concat_str_oid_msg(char *msg, sai_object_id_t lag_oid) {
-    char *concat_msg = NULL;
-    asprintf(&concat_msg, "%s 0x%lX", msg, lag_oid);
-    return concat_msg;
+void log_port_list(sai_status_t status, sai_object_id_t lag_oid, sai_attribute_t *lag_port_list_attr) {
+    if (status != SAI_STATUS_SUCCESS) {
+        printf("Failed to get LAG 0x%lX PORT_LIST\n", lag_oid);
+    } else {
+        printf("LAG 0x%lX PORT_LIST (%u ports):\n", lag_oid, lag_port_list_attr[0].value.objlist.count);
+        for (uint32_t i = 0; i < lag_port_list_attr[0].value.objlist.count; i++) {
+            printf("  Port[%u] = 0x%lX\n", i, lag_port_list_attr[0].value.objlist.list[i]);
+        }
+    }
 }
 
 void log_message(char *msg, char* err, sai_status_t status) {
@@ -134,17 +140,42 @@ void test_sai_api_lag() {
     sai_object_id_t lag_member_oid_4;
     status = lag_api->create_lag_member(&lag_member_oid_4, 2, attrs_4);
     
-    status = lag_api->get_lag_attribute(lag_oid_1, 0, NULL);
-    status = lag_api->get_lag_attribute(lag_oid_2, 0, NULL);
+    sai_attribute_t lag_port_list_1_attr[1];
+    sai_object_id_t port_list[MAX_NUMBER_OF_LAG_MEMBERS];
+    
+    lag_port_list_1_attr[0].id = SAI_LAG_ATTR_PORT_LIST;
+    lag_port_list_1_attr[0].value.objlist.list = port_list;
+    lag_port_list_1_attr[0].value.objlist.count = 0;  // start empty
 
-    status = lag_api->get_lag_member_attribute(lag_member_oid_1, 0, NULL);
-    status = lag_api->get_lag_member_attribute(lag_member_oid_3, 0, NULL);
+    status = lag_api->get_lag_attribute(lag_oid_1, 1, lag_port_list_1_attr);
+    log_port_list(status, lag_oid_1, lag_port_list_1_attr);
+    
+    sai_attribute_t lag_port_list_2_attr[1];
+    
+    lag_port_list_2_attr[0].id = SAI_LAG_ATTR_PORT_LIST;
+    lag_port_list_2_attr[0].value.objlist.list = port_list;
+    lag_port_list_2_attr[0].value.objlist.count = 0;  // start empty
+
+    status = lag_api->get_lag_attribute(lag_oid_2, 1, lag_port_list_2_attr);
+    log_port_list(status, lag_oid_2, lag_port_list_2_attr);
+
+    sai_attribute_t lag_id_attr[1];
+    lag_id_attr[0].id = SAI_LAG_MEMBER_ATTR_LAG_ID;
+    status = lag_api->get_lag_member_attribute(lag_member_oid_1, 1, lag_id_attr);
+    printf("Got LAG ID: 0x%lX\n", lag_id_attr[0].value.oid);
+
+    sai_attribute_t port_id_attr[1];
+    port_id_attr[0].id = SAI_LAG_MEMBER_ATTR_PORT_ID;
+    status = lag_api->get_lag_member_attribute(lag_member_oid_3, 1, port_id_attr);
+    printf("Got PORT ID: 0x%lX\n", port_id_attr[0].value.oid);
     
     status = lag_api->remove_lag_member(lag_member_oid_2);
-    status = lag_api->get_lag_attribute(lag_oid_1, 0, NULL);
+    status = lag_api->get_lag_attribute(lag_oid_1, 1, lag_port_list_1_attr);
+    log_port_list(status, lag_oid_1, lag_port_list_1_attr);
 
     status = lag_api->remove_lag_member(lag_member_oid_3);
-    status = lag_api->get_lag_attribute(lag_oid_2, 0, NULL);
+    status = lag_api->get_lag_attribute(lag_oid_2, 1, lag_port_list_2_attr);
+    log_port_list(status, lag_oid_2, lag_port_list_2_attr);
 
     status = lag_api->remove_lag_member(lag_member_oid_1);
     status = lag_api->remove_lag_member(lag_member_oid_4);
