@@ -188,7 +188,12 @@ sai_status_t get_lag_attribute(_In_ const sai_object_key_t   *key,
         return SAI_STATUS_FAILURE;
     }
     
-    uint32_t needed = 0;
+    if (value->objlist.count == 0) {
+        printf("Attribute objlist.count can't be 0!");
+        return SAI_STATUS_BUFFER_OVERFLOW;
+    }
+
+    uint32_t object_count = 0;
     uint32_t idx = 0;
     uint32_t capacity = value->objlist.count;
 
@@ -206,19 +211,16 @@ sai_status_t get_lag_attribute(_In_ const sai_object_key_t   *key,
             lag_db.members[member_index].lag_oid != key->object_id)
             continue;
 
-        needed++;
+        object_count++;
         if (idx < capacity) {
             value->objlist.list[idx++] = lag_db.members[member_index].port_oid;
+        } else {
+            printf("Insufficient objlist capacity, returning buffer overflow");
+            return SAI_STATUS_BUFFER_OVERFLOW;
         }
     }
 
-    if (capacity < needed) {
-        value->objlist.count = needed;
-        printf("Returning buffer overflow for LAG 0x%lx, needed count: %d\n", lag_db.lags[db_index].oid, needed);
-        return SAI_STATUS_BUFFER_OVERFLOW;
-    }
-
-    value->objlist.count = needed;
+    value->objlist.count = object_count;
     return SAI_STATUS_SUCCESS;
 }
 

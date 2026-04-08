@@ -141,34 +141,24 @@ void test_sai_api_lag() {
     status = lag_api->create_lag_member(&lag_member_oid_4, 2, attrs_4);
 
 
+    uint32_t port_list_size = 2;
+
+    // prepare attr for GET operation
     sai_attribute_t lag_port_list_1_attr[1];
     lag_port_list_1_attr[0].id = SAI_LAG_ATTR_PORT_LIST;
-    // lag_port_list_1_attr[0].value.objlist.list = NULL;
-    lag_port_list_1_attr[0].value.objlist.count = 0;  // start empty
-
-    // get required size
-    status = lag_api->get_lag_attribute(lag_oid_1, 1, lag_port_list_1_attr);
-
-    //allocate buffer
-    sai_object_id_t port_list_1[lag_port_list_1_attr[0].value.objlist.count];
+    lag_port_list_1_attr[0].value.objlist.count = port_list_size;
+    sai_object_id_t port_list_1[port_list_size];
     lag_port_list_1_attr[0].value.objlist.list = port_list_1;
 
     // get data
     status = lag_api->get_lag_attribute(lag_oid_1, 1, lag_port_list_1_attr);
     log_port_list(status, lag_oid_1, lag_port_list_1_attr);
     
-
+    // prepare attr for GET operation
     sai_attribute_t lag_port_list_2_attr[1];
-    
     lag_port_list_2_attr[0].id = SAI_LAG_ATTR_PORT_LIST;
-    // lag_port_list_2_attr[0].value.objlist.list = NULL;
-    lag_port_list_2_attr[0].value.objlist.count = 0;  // start empty
-
-    // get required size
-    status = lag_api->get_lag_attribute(lag_oid_2, 1, lag_port_list_2_attr);
-    
-    // allocate buffer
-    sai_object_id_t port_list_2[lag_port_list_2_attr[0].value.objlist.count];
+    lag_port_list_1_attr[0].value.objlist.count = port_list_size;
+    sai_object_id_t port_list_2[port_list_size];
     lag_port_list_2_attr[0].value.objlist.list = port_list_2;
     
     // get data
