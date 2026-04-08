@@ -163,7 +163,7 @@ sai_status_t stub_get_lag_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    printf("Called stub_get_lag_attribute\n");
+    printf("Called stub_get_lag_attribute for LAG 0x%lX\n", lag_id);
     const sai_object_key_t key = { .object_id = lag_id };
     return sai_get_attributes(&key, NULL, lag_attribs, lag_vendor_attribs, attr_count, attr_list);
 }
@@ -187,35 +187,38 @@ sai_status_t get_lag_attribute(_In_ const sai_object_key_t   *key,
         printf("Unexpected attribute ID: %ld\n", (int64_t)arg);
         return SAI_STATUS_FAILURE;
     }
-
-    value->objlist.count = 0;
+    
+    uint32_t needed = 0;
+    uint32_t idx = 0;
+    uint32_t capacity = value->objlist.count;
 
     for (uint32_t i = 0; i < MAX_NUMBER_OF_LAG_MEMBERS; i++) {
         sai_object_id_t member_oid = lag_db.lags[db_index].members_ids[i];
-        if (member_oid == SAI_NULL_OBJECT_ID) {
+        if (member_oid == SAI_NULL_OBJECT_ID)
             continue;
-        }
-
+        
         uint32_t member_index;
         status = stub_object_to_type(member_oid, SAI_OBJECT_TYPE_LAG_MEMBER, &member_index);
-        if (status != SAI_STATUS_SUCCESS) {
-            printf("invalid member, cannot map OID 0x%lX\n", member_oid);
+        if (status != SAI_STATUS_SUCCESS)
             continue;
-        }
-
-        if (!lag_db.members[member_index].is_used || lag_db.members[member_index].lag_oid != key->object_id) {
-            printf("skipping unused or wrong LAG member 0x%lX\n", member_oid);
+        
+        if (!lag_db.members[member_index].is_used ||
+            lag_db.members[member_index].lag_oid != key->object_id)
             continue;
-        }
 
-        if (value->objlist.count >= MAX_NUMBER_OF_LAG_MEMBERS) {
-            printf("objlist full, cannot add more ports\n");
-            break;
+        needed++;
+        if (idx < capacity) {
+            value->objlist.list[idx++] = lag_db.members[member_index].port_oid;
         }
-
-        value->objlist.list[value->objlist.count++] = lag_db.members[member_index].port_oid;
     }
 
+    if (capacity < needed) {
+        value->objlist.count = needed;
+        printf("Returning buffer overflow for LAG 0x%lx, needed count: %d\n", lag_db.lags[db_index].oid, needed);
+        return SAI_STATUS_BUFFER_OVERFLOW;
+    }
+
+    value->objlist.count = needed;
     return SAI_STATUS_SUCCESS;
 }
 
